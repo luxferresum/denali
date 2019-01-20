@@ -5,7 +5,7 @@ import {
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
-import { ui, Command, Project, unwrap } from 'denali-cli';
+import { ui, Command, Project, unwrap } from '@denali-js/cli';
 import * as createDebug from 'debug';
 
 const debug = createDebug('denali:commands:server');
@@ -42,7 +42,12 @@ export default class ServerCommand extends Command {
       type: <any>'string'
     },
     debug: {
-      description: 'Run in debug mode (add the --debug flag to node, launch node-inspector)',
+      description: 'Run in debug mode (add the --inspect flag to node)',
+      default: false,
+      type: <any>'boolean'
+    },
+    debugBrk: {
+      description: 'Run in debug mode (add the --inspect-brk flag to node)',
       default: false,
       type: <any>'boolean'
     },
@@ -147,9 +152,13 @@ export default class ServerCommand extends Command {
   protected startServer(argv: any, project: Project) {
     let bootstrapPath = project.isAddon ? path.join('test/dummy/index.js') : 'index.js';
     let args = [ bootstrapPath ];
-    if (argv.debug) {
+    if (argv.debugBrk) {
       args.unshift('--inspect-brk');
     }
+    if(argv.debug) {
+      args.unshift('--inspect');
+    }
+    
     if (!fs.existsSync(bootstrapPath)) {
       throw new Error(`Unable to start your application: missing ${ bootstrapPath } file`);
     }

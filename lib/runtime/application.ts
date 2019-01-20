@@ -51,6 +51,8 @@ export interface Initializer {
  */
 export default class Application extends Addon {
 
+  container: Container;
+
   /**
    * The Router instance for this Application.
    */
@@ -92,6 +94,8 @@ export default class Application extends Addon {
     });
 
     this.drainers = [];
+
+    this.container = container;
 
     // Setup some helpful container shortcuts
     container.register('app:main', this);
@@ -158,7 +162,7 @@ export default class Application extends Addon {
     let appRoutes = this.resolver.retrieve<RoutesMap>('config:routes') || noop;
     appRoutes(this.router, this);
     // Load addon routes in reverse order so routing precedence matches addon load order
-    this.addons.reverse().forEach((addon) => {
+    [...this.addons].reverse().forEach((addon) => {
       let addonRoutes = addon.resolver.retrieve<RoutesMap>('config:routes') || noop;
       addonRoutes(this.router, this);
     });
@@ -210,7 +214,7 @@ export default class Application extends Addon {
    * @since 0.1.0
    */
   async runInitializers(): Promise<void> {
-    let initializers = values(container.lookupAll<Initializer>('initializer'));
+    let initializers = values(container.lookupAll<Initializer>('initializer')).reverse();
     initializers = topsort(<Vertex[]>initializers);
     for (let initializer of initializers) {
       await initializer.initialize(this);
